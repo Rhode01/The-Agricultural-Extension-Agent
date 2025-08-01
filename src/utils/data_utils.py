@@ -99,24 +99,24 @@ class maize_disease_util:
         x = layers.Dropout(0.3)(x)
         outputs = layers.Dense(num_classes, activation="softmax")(x)
 
-        model = tf.keras.Model(inputs, outputs, name=f"{base_model_name}_classifier")
+        model = tf.keras.Model(inputs, outputs)
         model.compile(
             optimizer=tf.keras.optimizers.Adam(1e-4),
             loss="sparse_categorical_crossentropy",
-            metrics=["accuracy"],
+            metrics=["accuracy"]
         )
         model.summary()
         return model
     def get_callbacks(self) -> List[callbacks.Callback]:
         return [
             callbacks.EarlyStopping(
-                monitor="val_accuracy", patience=5, restore_best_weights=True
-            ),
+                monitor="val_accuracy", patience=5, restore_best_weights=True,mode='max', verbose=1),
             callbacks.ModelCheckpoint(
                 filepath=str(self.save_dir / "best_model.keras"),
                 monitor="val_accuracy",
                 save_best_only=True,
                 verbose=1,
+                mode="max"
             )]
     def start_training(self):
         model = self.build_finetune_model()

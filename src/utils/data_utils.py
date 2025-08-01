@@ -54,7 +54,7 @@ class maize_disease_util:
         return train_ds, val_ds
     def clean_train_images(self,class_names:List[str]):
         for classname in class_names:
-            folder_path = folder_path/classname
+            folder_path = self.dataset_dir/classname
             for fname in os.listdir(folder_path):
                 file = os.path.join(folder_path,fname)
                 try:

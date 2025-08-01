@@ -96,8 +96,8 @@ class maize_disease_util:
         x = layers.GlobalAveragePooling2D()(x)
         x = layers.Dropout(0.3)(x)
         x = layers.Dense(256, activation="relu")(x)
-        x = layers.Dropout(0.3, name="dropout_dense_1")(x)
-        outputs = layers.Dense(num_classes, activation="softmax", name="output_layer")(x)
+        x = layers.Dropout(0.3)(x)
+        outputs = layers.Dense(num_classes, activation="softmax")(x)
 
         model = tf.keras.Model(inputs, outputs, name=f"{base_model_name}_classifier")
         model.compile(

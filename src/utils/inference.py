@@ -6,18 +6,32 @@ import os
 
 def run_inference(image_path:Path)->str:
     class_names = ['']
-    model = tf.keras.model.load_model(Path(__file__).resolve().parents[1] / "models" /"saved_model"/"best_model.keras")
-    img =tf.keras.utils.load_img(
-    image_path,target_size=model.input_shape)
-    img_bytes = tf.keras.utils.img_to_array(
-        img
-    )
-    img_dims = np.expand_dims(img_bytes, axis=0)
+    model_dir = Path(__file__).resolve().parents[1] / "models" / "saved_model"
+    model_path = model_dir / "best_model.keras"
+    model = tf.keras.models.load_model(model_path)
 
-    predictions = model.predict(img_dims)
-    index = np.argmax(predictions)
-    prediction_clas = class_names[index]
-    return prediction_clas
+    _, img_h, img_w, _ = model.input_shape
+    img = tf.keras.utils.load_img(
+        image_path,
+        target_size=(img_h, img_w)
+    )
+
+    img_array = tf.keras.utils.img_to_array(img)
+    img_array = np.expand_dims(img_array, axis=0)
+
+    preprocess_fn = getattr(
+        tf.keras.applications,
+        "EfficientNetV2SPreprocessInput",
+        None
+    )
+    if preprocess_fn:
+        img_array = preprocess_fn(img_array)
+    else:
+        img_array = img_array / 255.0
+
+    preds = model.predict(img_array)
+    idx = np.argmax(preds, axis=1)[0]
+    return class_names[idx]
 
 
 

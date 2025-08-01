@@ -90,14 +90,12 @@ class maize_disease_util:
         if preprocess_fn:
             x = preprocess_fn(x)
         else:
-            x = layers.Rescaling(1.0 / 255)(x)
+            x = layers.Rescaling(1.0 / 255.0)(x)
 
         x = backbone(x, training=not freeze_backbone)
-        x = layers.GlobalAveragePooling2D(name="global_avg_pool")(x)
+        x = layers.GlobalAveragePooling2D()(x)
         x = layers.Dropout(0.3)(x)
-        x = layers.Dense(
-            256, activation="relu", kernel_regularizer=regularizers.l2(), name="dense_1"
-        )(x)
+        x = layers.Dense(256, activation="relu")(x)
         x = layers.Dropout(0.3, name="dropout_dense_1")(x)
         outputs = layers.Dense(num_classes, activation="softmax", name="output_layer")(x)
 

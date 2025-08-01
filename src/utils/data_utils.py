@@ -48,6 +48,9 @@ class maize_disease_util:
             batch_size=self.batch_size,
             label_mode="int",
         )
+        AUTOTUNE = tf.data.AUTOTUNE
+        train_ds = train_ds.cache().shuffle(1000).prefetch(buffer_size=AUTOTUNE)
+        val_ds = val_ds.cache().prefetch(buffer_size=AUTOTUNE)
         return train_ds, val_ds
     def clean_train_images(self,folder_path:Path, class_names:List[str]):
         for classname in class_names:
@@ -63,8 +66,11 @@ class maize_disease_util:
         return
     def list_classname(self,dataset_path:Path)-> List[str]:
         class_names = []
-        
-    def build_transfer_model(self,num_classes: int,base_model_name: str = "EfficientNetB0",
+        for class_name in os.listdir(dataset_path):
+            class_names.append(class_name)
+        return class_names
+
+    def build_transfer_model(self,num_classes: int,base_model_name: str = "EfficientNetV2L",
         freeze_backbone: bool = True,
     ) -> tf.keras.Model:
         backbone_cls = getattr(tf.keras.applications, base_model_name)
@@ -77,7 +83,7 @@ class maize_disease_util:
         if freeze_backbone:
             backbone.trainable = False
 
-        inputs = tf.keras.Input(shape=(*self.image_size, 3))
+        inputs = tf.keras.layers.Input(shape=(*self.image_size, 3))
         x = self.data_augmentation()(inputs)
 
         preprocess_fn = getattr(tf.keras.applications, f"{base_model_name}PreprocessInput", None)

@@ -6,7 +6,7 @@ from tensorflow.keras import models,callbacks,layers
 class maize_disease_util:
     def __init__(
         self,
-        dataset_dir: Path,
+        dataset_dir: Optional[Path] = None,
         image_size: Tuple[int, int] = (256, 256),
         batch_size: int = 32,
         save_dir: Optional[Path] = None,
@@ -70,7 +70,7 @@ class maize_disease_util:
             class_names.append(class_name)
         return class_names
 
-    def build_transfer_model(self,num_classes: int,base_model_name: str = "EfficientNetV2L",
+    def build_transfer_model(self,num_classes: int,base_model_name: str = "EfficientNetV2S",
         freeze_backbone: bool = True,
     ) -> tf.keras.Model:
         backbone_cls = getattr(tf.keras.applications, base_model_name)
@@ -80,6 +80,7 @@ class maize_disease_util:
             input_shape=(*self.image_size, 3),
             pooling=None,
         )
+        self.base_model = backbone 
         if freeze_backbone:
             backbone.trainable = False
 
@@ -105,7 +106,6 @@ class maize_disease_util:
             loss="sparse_categorical_crossentropy",
             metrics=["accuracy"]
         )
-        model.summary()
         return model
     def get_callbacks(self) -> List[callbacks.Callback]:
         return [
@@ -118,12 +118,32 @@ class maize_disease_util:
                 verbose=1,
                 mode="max"
             )]
-    def start_training(self):
-        model = self.build_finetune_model()
-        model.fit(self.create_train_val_dataset(),
-                    epochs =20,
-                    verbose=1,
-                    validation_data = validation_dataset,
-                    callbacks =self.add_callsbacks())
+    def start_train_loop(self,model:tf.keras.models.Model,epochs:int =20):
+        train_ds, val_ds = self.create_train_val_dataset()
+        callbacks = self.get_callbacks()
+        version_one = model.fit(
+            train_ds,
+            validation_data = val_ds,
+            epochs = epochs,
+            callbacks = callbacks
+        )
+        for layer in self.base_model.layers[-20:]:
+            layer.trainable = True
+
+        model.compile(
+            optimizer=tf.keras.optimizers.Adam(learning_rate=1e-5),
+            loss="sparse_categorical_crossentropy",
+            metrics=["accuracy"]
+        )
+
+        history2 = model.fit(
+            train_ds,
+            validation_data=val_ds,
+            epochs=10,
+            callbacks=callbacks
+        )
+        model.save(self.save_dir / "model_finetuned.keras")
+        print(" Saved fine-tuned model to model_finetuned.keras")
+        return version_one, history2
                     
     

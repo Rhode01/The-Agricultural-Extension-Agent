@@ -61,6 +61,9 @@ class maize_disease_util:
                     print(f"Failed to decode an image at {file} deleting the image")
                     os.remove(file)
         return
+    def list_classname(self,dataset_path:Path)-> List[str]:
+        class_names = []
+        
     def build_transfer_model(self,num_classes: int,base_model_name: str = "EfficientNetB0",
         freeze_backbone: bool = True,
     ) -> tf.keras.Model:

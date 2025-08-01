@@ -52,7 +52,7 @@ class maize_disease_util:
         train_ds = train_ds.cache().shuffle(1000).prefetch(buffer_size=AUTOTUNE)
         val_ds = val_ds.cache().prefetch(buffer_size=AUTOTUNE)
         return train_ds, val_ds
-    def clean_train_images(self,folder_path:Path, class_names:List[str]):
+    def clean_train_images(self,class_names:List[str]):
         for classname in class_names:
             folder_path = folder_path/classname
             for fname in os.listdir(folder_path):
@@ -64,9 +64,9 @@ class maize_disease_util:
                     print(f"Failed to decode an image at {file} deleting the image")
                     os.remove(file)
         return
-    def list_classname(self,dataset_path:Path)-> List[str]:
+    def list_classname(self)-> List[str]:
         class_names = []
-        for class_name in os.listdir(dataset_path):
+        for class_name in os.listdir(self.dataset_dir):
             class_names.append(class_name)
         return class_names
 
